@@ -1,9 +1,0 @@
-{
-    "functions": {
-      "api/updatePortfolio.js": {
-        "runtime": "nodejs16.x",
-        "cron": "0 0 * * *" 
-      }
-    }
-  }
-  
