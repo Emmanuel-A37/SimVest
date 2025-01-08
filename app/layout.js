@@ -14,7 +14,12 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="https://i.postimg.cc/JzB15bCh/abstract-shape.png" />
       </head>
       <body>
-        {children}
+        <div className="max-sm:hidden">
+          {children}
+        </div>
+        <div className="sm:hidden text-center ">
+          Please use a laptop to view this site
+        </div>
       </body>
     </html>
   );
