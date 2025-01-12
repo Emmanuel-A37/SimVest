@@ -43,7 +43,9 @@ export async function middleware(req) {
 
       
       if (isProtectedRoute) {
-        return NextResponse.redirect(new URL('/auth/signin', req.url));
+        const response = NextResponse.redirect(new URL('/auth/signin', req.url));
+        response.cookies.set('session', '', { path: '/', maxAge: 0 });
+        return response;
       }
       return NextResponse.next();
     }
@@ -55,8 +57,9 @@ export async function middleware(req) {
 
    
     const response = NextResponse.next();
-    response.headers.set('X-Custom-Username', userSession.username);
-
+    if (userSession?.username) {
+      response.headers.set('X-Custom-Username', userSession.username);
+    }
     return response;
   } catch (error) {
     console.error('Middleware Error:', error.message);

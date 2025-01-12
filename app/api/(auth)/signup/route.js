@@ -36,11 +36,13 @@ export const POST = async (req) => {
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + 7 * 60 * 60);
         const cookie = await cookies();
-        await cookie.set("session", token, {
+        await cookies().set("session", token, {
             httpOnly: true,
-            secure: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
             expires: expiresAt,
-        });
+          });
 
         return NextResponse.json({ user: newUser }, { status: 200 });
     } catch (error) {
