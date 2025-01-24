@@ -28,6 +28,7 @@ export const POST = async (req) => {
         expiresAt.setSeconds(expiresAt.getSeconds() + 7 * 60 * 60);
         const cookie = await cookies()
         await cookies().set("session", token, {
+            domain: process.env.NODE_ENV === "production" ? "sim-vest.vercel.app" : undefined,
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',

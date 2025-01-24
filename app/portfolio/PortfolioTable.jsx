@@ -22,7 +22,7 @@ const PortfolioTable = () => {
                 setUser(portfolioData);
             } catch (error) {
                 console.error('Error fetching user data:', error);
-                setError('Failed to load portfolio data.');
+                
             }
         };
 

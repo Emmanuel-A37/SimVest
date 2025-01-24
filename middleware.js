@@ -40,7 +40,6 @@ export async function middleware(req) {
       userSession = payload
     } catch (err) {
       console.error('JWT Verification Error:', err.message);
-
       
       if (isProtectedRoute) {
         const response = NextResponse.redirect(new URL('/auth/signin', req.url));
