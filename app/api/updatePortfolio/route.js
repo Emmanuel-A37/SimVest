@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import User from "@/app/lib/models/users";
 import { connect } from "@/app/lib/db";
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString();
-};
+function polygonSymbol(assetType, assetName, assetId) {
+  if (assetType === "crypto") {
+    return `X:${assetName}`;
+  }
+  return  assetName;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export const PATCH = async () => {
   try {
@@ -20,18 +27,27 @@ export const PATCH = async () => {
     }
 
 
-    const updatedUsers = await Promise.all(
-      users.map(async (user) => {
+    const updatedUsers = [];
+      for (const user of users){
         try {
-          const updatedPortfolioStocks = await Promise.all(
-            user.portfolio.stocks.map(async (stock) => {
+          const updatedPortfolioStocks = [];
+          for (const stock of user.portfolio.stocks) {
               const baseUrl = `https://api.polygon.io/v1/indicators/ema/`;
-              const formattedTicker = stock.assetName;
+              const formattedTicker = polygonSymbol("stocks", stock.assetName, stock.assetId);
               const params = `?timespan=day&adjusted=true&window=1&series_type=close&order=desc&limit=7&apiKey=WwOajxZs8KyFdedE_lNywWnMkLJbav3I`;
               const url = `${baseUrl}${formattedTicker}${params}`;
               const response = await fetch(url);
 
               if (!response.ok) {
+                 const errorBody = await response.text();
+                  console.error(`[${user.username}] Polygon fetch failed:`, {
+                      assetId: stock.assetId,
+                      assetName: stock.assetName,
+                      formattedTicker,
+                      url,
+                      status: response.status,
+                      errorBody
+                  });
                 throw new Error(`Failed to fetch data for ${stock.assetId}`);
               }
 
@@ -40,23 +56,32 @@ export const PATCH = async () => {
               const currentValue = stock.quantity * currentPrice;
               const change = ((currentValue / stock.averageCost) - 1) * 100;
 
-              return {
-                ...stock,
-                currentValue,
-                change,
-              };
-            })
-          );
+                updatedPortfolioStocks.push({
+                  ...stock,
+                  currentValue,
+                  change,
+                });
+                await sleep(12000);
+          };
 
-          const updatedPortfolioCrypto = await Promise.all(
-            user.portfolio.crypto.map(async (crypto) => {
+          const updatedPortfolioCrypto = [];
+          for (const crypto of user.portfolio.crypto) {
               const baseUrl = `https://api.polygon.io/v1/indicators/ema/`;
-              const formattedTicker = `X:${crypto.assetName}`;
+              const formattedTicker = polygonSymbol("crypto", crypto.assetName, crypto.assetId);
               const params = `?timespan=day&adjusted=true&window=1&series_type=close&order=desc&limit=7&apiKey=WwOajxZs8KyFdedE_lNywWnMkLJbav3I`;
               const url = `${baseUrl}${formattedTicker}${params}`;
               const response = await fetch(url);
 
               if (!response.ok) {
+                 const errorBody = await response.text();
+                  console.error(`[${user.username}] Polygon fetch failed:`, {
+                      assetId: crypto.assetId,
+                      assetName: crypto.assetName,
+                      formattedTicker,
+                      url,
+                      status: response.status,
+                      errorBody
+                  });
                 throw new Error(`Failed to fetch data for ${crypto.assetId}`);
               }
 
@@ -65,13 +90,14 @@ export const PATCH = async () => {
               const currentValue = crypto.quantity * currentPrice;
               const change = ((currentValue / crypto.averageCost) - 1) * 100;
 
-              return {
-                ...crypto,
-                currentValue,
-                change,
-              };
-            })
-          );
+                updatedPortfolioCrypto.push({
+                  ...crypto,
+                  currentValue,
+                  change,
+                });
+
+                await sleep(12000);
+          };
 
           user.portfolio.stocks = updatedPortfolioStocks;
           user.portfolio.crypto = updatedPortfolioCrypto;
@@ -85,7 +111,7 @@ export const PATCH = async () => {
             0
           );
 
-          const currentDate = formatDate(new Date());
+          const currentDate = new Date();
 
           user.portfolioValueHistory.stocks.push({
             date: currentDate,
@@ -98,13 +124,13 @@ export const PATCH = async () => {
 
           await user.save();
 
-          return { username: user.username, success: true };
+           updatedUsers.push({ username: user.username, success: true });;
         } catch (err) {
           console.error(`Failed to update user ${user.username}:`, err);
-          return { username: user.username, success: false, error: err.message };
+           updatedUsers.push({ username: user.username, success: false, error: err.message });
         }
-      })
-    );
+      }
+    ;
 
     return NextResponse.json(
       {

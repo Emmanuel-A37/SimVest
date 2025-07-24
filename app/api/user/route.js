@@ -110,6 +110,12 @@ export const POST = async (req) => {
       ? ((totalCurrentValue - totalInvestmentValue) / totalInvestmentValue) * 100
       : 0;
 
+    const now = new Date();
+    user.portfolioValueHistory[assetType].push({
+      date: now,
+      totalValue: financialMetrics.totalPortfolioValue,
+    });
+
     await user.save();
 
     return NextResponse.json({ message: "Portfolio updated successfully", user }, { status: 200 });

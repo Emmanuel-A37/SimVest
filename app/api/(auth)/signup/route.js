@@ -6,16 +6,24 @@ import { cookies } from 'next/headers';
 import { TextEncoder } from 'util';
 import bcrypt from 'bcrypt';
 
+
 export const POST = async (req) => {
     try {
         const body = await req.json();
+
  
         await connect();
-        const { password, username } = body;
+        const { password, username, email } = body;
 
-        // Check if username or password is missing
-        if (!password || !username) {
-            return NextResponse.json({ error: 'Missing username or password' }, { status: 400 });
+
+        if (!password || !username || !email) {
+            return NextResponse.json({ error: 'Please fill the form' }, { status: 400 });
+        }
+        const existingUser = await User.findOne({
+            $or: [{ username }, { email }]
+        });
+        if (existingUser) {
+        return NextResponse.json({ error: 'Username or email already exists' }, { status: 400 });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);

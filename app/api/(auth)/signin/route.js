@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 
 import bcrypt from 'bcrypt';
 
+
 export const POST = async (req) => {
     try {
         const body = await req.json();
@@ -15,8 +16,11 @@ export const POST = async (req) => {
         const newUser = await User.findOne({username});
         const verify = await bcrypt.compare(password, newUser.password);
 
-        if(!verify || !newUser){
-            return  NextResponse.json({error : "No such User"}, {status : 400})
+        if(!verify){
+            return  NextResponse.json({error : "Wrong Username or Password"}, {status : 400})
+        }
+        if(!newUser){
+            return  NextResponse.json({error : "User not found"}, {status : 400})
         }
         const secret = new TextEncoder().encode(process.env.SECRET_KEY);
         const token = await new SignJWT({username})

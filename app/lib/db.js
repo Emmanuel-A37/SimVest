@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 
-const mongodb_uri = process.env.MONGO_URI;
 
- export const connect = () => {
+ const mongodb_uri = process.env.MONGO_URI;
+
+
+ export const connect = async () => {
+    console.log("Loaded MONGO_URI from .env: ", process.env.MONGO_URI);
+
     const connectionState = mongoose.connection.readyState;
+    
 
     if(connectionState == 1){
         console.log("Already Connected");
@@ -16,10 +21,13 @@ const mongodb_uri = process.env.MONGO_URI;
     }
 
     try {
-        mongoose.connect(mongodb_uri);
+       await mongoose.connect(mongodb_uri);
     } catch (error) {
-        throw new Error("error")
+        throw new Error( error.message)
     }
+
+
+
 
 
 }
