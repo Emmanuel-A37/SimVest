@@ -12,7 +12,7 @@ const Footer = () => {
         </div>
         <div>
             <p className=" text-gray-400">
-                &copy; 2025 SimVest, Inc. All rights reserved.
+                &copy; {new Date().getFullYear()} SimVest, Inc. All rights reserved.
             </p>
         </div>
     </div>
